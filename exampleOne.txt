@@ -1,0 +1,20 @@
+[pfrankl2@wasp Assignment1]$ ./producer & ./consumer
+[1] 2146230
+The Producer has produced: 1
+The Producer has produced: 2
+The items currently in the buffer are (0 represents an empty space): 1 2
+The Consumer has consumed: 2
+The items currently in the buffer are (0 represents an empty space): 1 0
+The Consumer has consumed: 1
+The Producer has produced: 3
+The Producer has produced: 4
+The items currently in the buffer are (0 represents an empty space): 3 4
+The Consumer has consumed: 4
+The items currently in the buffer are (0 represents an empty space): 3 0
+The Consumer has consumed: 3
+The Producer has produced: 5
+The Producer has produced: 6
+The items currently in the buffer are (0 represents an empty space): 5 6
+The Consumer has consumed: 6
+The items currently in the buffer are (0 represents an empty space): 5 0
+The Consumer has consumed: 5
