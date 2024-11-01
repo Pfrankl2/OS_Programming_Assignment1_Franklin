@@ -1,5 +1,5 @@
 # Overview
-The goal of Assignment 1 was to simulate the Producer-Consumer Problem seen in process synchronization. The requirments for this assignment were to use three files ('buffer.hpp' / 'producer.cpp' / consumer.cpp') in a Linux environment to demonstrate the Consumer-Producer Problem with a bounded buffer of size 2, Linux's shared memory and semaphores.
+The goal of Assignment 1 was to simulate the Producer-Consumer Problem seen in process synchronization. The requirments for this assignment were to use three files ('buffer.hpp' / 'producer.cpp' / 'consumer.cpp') in a Linux environment to demonstrate the Consumer-Producer Problem with a bounded buffer of size 2, Linux's shared memory and semaphores.
 
 The header file 'structure.hpp' holds all of the include files needed to access critical functionality of this problem, such as that of semaphores and shared memory (when run in a Linux environment). Additionally, the 'buffer' structure is defined in this file to be used later as a representation of a real system buffer that can hold various data items. For my simulation I used an array of integers to act as each item in the buffer, where a 0 represents an empty space in the buffer.
 
