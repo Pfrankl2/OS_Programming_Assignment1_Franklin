@@ -15,55 +15,54 @@
 // my own reference while working on Assignment 1!
 
 #include "buffer.hpp"
+#include <pthread.h>
 
-int main() {
+void* consumer(void* arg) {
+    buffer* shmp = static_cast<buffer*>(arg);
 
-    //
-    // Default scenario of creating a Shared Memory Pointer and testing various conditions
-    // to assure it is linked properly for use by the Producer & Consumer Processes.
-    //
+    // Main logical loop of Consumer Implementation for "i < #" items.
+    for (int i = 0; i < 6; ++i) {
+        sem_wait(&shmp->semFull); // Wait until there's an item to consume.
+        sem_wait(&shmp->S); // Wait for exclusive access to the buffer.
 
-    sleep(1); // Convention used to make sure that the Producer Process gets ahead of the Consumer Process
-              // on startup. (This is just something that I read about and do not know if it is necessary!)
+        if (shmp->count > 0) {
+            std::cout << "The items currently in the buffer are: ";
+            for (int j = 0; j < shmp->count; ++j) {
+                std::cout << shmp->data[j] << " ";
+            }
 
-    const char* shmPtr = "/sharedMemObject"; // Creates a Shared Memory Pointer and links it to string.
-    int fileDescriptor = shm_open(shmPtr, O_RDWR, S_IRUSR | S_IWUSR); // Creates a File Descriptor that opens/creates
-                                                                      // the Shared Memory Object with a parameter
-                                                                      // for its creation (O_RDWR) as well as
-                                                                      // its access (S_IRUSR | S_IWUSR).
+            // Consume the oldest item in the buffer.
+            int consumedItem = shmp->data[0];
 
-    buffer* shmp = (struct buffer*)mmap(NULL, sizeof(*shmp), PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0); // Casts the 'mmap()' function to the type of
-                                                                                                                     // 'struct buffer*' to assign the Shared Memory
-                                                                                                                     // Object to the memory space of the producer.
-    
-    //
-    // Main conditional loop that allows the Consumer to consume items and remove them from the buffer.
-    //
+            // Shift items in the buffer after consumption.
+            for (int j = 1; j < shmp->count; ++j) {
+                shmp->data[j - 1] = shmp->data[j];
+            }
 
-    for (int i = 0; i < 6; ++i) { //limiting to 6 times to avoid too much output
-        sem_wait(&shmp->semFull);
-        sem_wait(&shmp->S);
+            // Clears the last slot of the buffer and updates 'count'.
+            shmp->data[shmp->count - 1] = 0;
+            shmp->count--;
 
-        // Decrements the global counter varaible of the Producer & Consumer and then stores
-        // the value of the consumed item after it has been removed.
-        shmp->count--;
-        int consumedItem = shmp->data[shmp->count];
-
-        // Prints out all items that are currently in the buffer.
-        std::cout << "The items currently in the buffer are: ";
-        for (int j = 0; j < 2; ++j) {
-            std::cout << shmp->data[j] << " ";
+            std::cout << "\nThe Consumer has consumed: " << consumedItem << std::endl;
         }
 
-        // Resets the global counter variable and displays information on what has been consumed by the Consumer.
-        shmp->data[shmp->count] = 0;
-        std::cout << '\n' << "The Consumer has consumed: " << consumedItem << std::endl;
-
-        // Process Synchronization from the Consumer to the Prodcer using shared variables.
-        sem_post(&shmp->semEmpty); // Signals that the buffer had 1 item removed from it.
-        sem_post(&shmp->S); // Signals to the Producer that the Consumer has finished executing.
+        sem_post(&shmp->S); // Release exclusive access from consumer.
+        sem_post(&shmp->semEmpty); // Signals that an item has been removed from the buffer.
     }
+    return nullptr;
+}
+
+int main() {
+    const char* shmPtr = "/sharedMemObject";
+    int fileDescriptor = shm_open(shmPtr, O_RDWR, S_IRUSR | S_IWUSR);
+    buffer* shmp = static_cast<buffer*>(mmap(nullptr, sizeof(buffer), PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0));
+
+    pthread_t consumerThread;
+    pthread_create(&consumerThread, nullptr, consumer, shmp);
+
+    // Waits for the consumer thread to finish executing.
+    pthread_join(consumerThread, nullptr);
 
     shm_unlink(shmPtr);
-    exit(EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
